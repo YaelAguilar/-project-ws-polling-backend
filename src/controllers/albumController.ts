@@ -16,7 +16,13 @@ export const createAlbum = async (req: Request, res: Response) => {
     const songFiles = files.songs;
 
     const coverImageUrl = await uploadImage(coverImageFile.path);
-    const songUrls = await Promise.all(songFiles.map((song) => uploadAudio(song.path)));
+    const songUrls = await Promise.all(songFiles.map(async (song) => {
+      const songUrl = await uploadAudio(song.path);
+      return {
+        url: songUrl,
+        title: song.originalname
+      };
+    }));
 
     const album = new Album({
       title,
@@ -53,4 +59,17 @@ export const waitForNewAlbum = (req: Request, res: Response) => {
   req.on('close', () => {
     clients = clients.filter(client => client !== res);
   });
+};
+
+export const getAlbumById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const album = await Album.findById(req.params.id);
+    if (!album) {
+      res.status(404).json({ message: 'Album not found' });
+      return;
+    }
+    res.status(200).json(album);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching album', error: error.message });
+  }
 };
