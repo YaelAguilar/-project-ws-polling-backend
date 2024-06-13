@@ -37,8 +37,7 @@ export const createAlbum = async (req: Request, res: Response) => {
     res.status(201).send(album);
 
     // Notificar a los clientes conectados
-    clients.forEach(client => client.json({ success: true, album }));
-    clients = [];
+    clients.forEach(client => client.write(`data: ${JSON.stringify({ album })}\n\n`));
   } catch (error) {
     console.error('Error creating album:', error);
     res.status(500).send({ message: 'Error creating album', error: error.toString() });
@@ -55,7 +54,13 @@ export const getAlbums = async (_req: Request, res: Response): Promise<void> => 
 };
 
 export const waitForNewAlbum = (req: Request, res: Response) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
   clients.push(res);
+
   req.on('close', () => {
     clients = clients.filter(client => client !== res);
   });
