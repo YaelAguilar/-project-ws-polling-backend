@@ -3,6 +3,7 @@ import cors from 'cors';
 import { connectDB } from './config/db';
 import authRoutes from './routes/authRoutes';
 import albumRoutes from './routes/albumRoutes';
+import webhookRoutes from './routes/webhookRoutes';
 import config from './config';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
@@ -16,6 +17,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/auth', authRoutes);
 app.use('/api/albums', albumRoutes);
+app.use('/webhooks', webhookRoutes);
 
 connectDB().then(() => {
   server.listen(config.PORT, () => {
